@@ -47,7 +47,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 		['7', '8', '9', '*'],
 		['4', '5', '6', '-'],
 		['1', '2', '3', '+'],
-		['0', '.', '=', '+'],
+		['0', '.', '=', 'x²'],
 	];
 
 	void _press(String value) {
@@ -56,6 +56,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 				_clear();
 			} else if (value == '=') {
 				_evaluate();
+			} else if (value == 'x²') {
+				_square();
 			} else {
 				_append(value);
 			}
@@ -116,6 +118,23 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 		}
 	}
 
+	void _square() {
+		if (_expression.isEmpty || _operators.contains(_expression[_expression.length - 1])) return;
+		try {
+			final parsed = Expression.parse(_expression);
+			final value = const ExpressionEvaluator().eval(parsed, <String, dynamic>{}) as num;
+			final squared = value * value;
+			if (!squared.isFinite) throw const FormatException('Result is too large');
+			_result = _formatNumber(squared.toDouble());
+			_error = '';
+			_justEvaluated = true;
+		} catch (_) {
+			_result = '';
+			_error = 'Invalid expression';
+			_justEvaluated = false;
+		}
+	}
+
 	String _formatNumber(double value) {
 		if (value == value.roundToDouble()) return value.toInt().toString();
 		return value.toString();
@@ -165,7 +184,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 												final column = index % 4;
 												final value = _buttonRows[row][column];
 												final isEquals = value == '=';
-												final isOperator = _operators.contains(value) || value == '(' || value == ')';
+														final isOperator = _operators.contains(value) || value == '(' || value == ')' || value == 'x²';
 												return _CalculatorButton(
 													label: value,
 													isAccent: isEquals,
